@@ -8,17 +8,60 @@
         body {
             margin: 0;
             overflow: hidden;
+            font-family: Arial, sans-serif;
         }
         #gameCanvas {
             display: block;
         }
+        #homeScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            z-index: 100;
+        }
+        #startButton {
+            padding: 15px 30px;
+            font-size: 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+        #startButton:hover {
+            background-color: #45a049;
+        }
+        h1 {
+            font-size: 48px;
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
     </style>
 </head>
 <body>
+    <!-- Home Screen -->
+    <div id="homeScreen">
+        <h1>3D Shooter Game</h1>
+        <p>Use arrow keys to move and spacebar to shoot</p>
+        <button id="startButton">Start Game</button>
+    </div>
+
     <!-- Link to Three.js from a CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Make sure game.js is in the root directory -->
-    <script src="./game.js"></script> <!-- './' ensures it's relative to the root -->
+    <!-- Game script -->
+    <script src="./game.js"></script>
 </body>
 </html>
