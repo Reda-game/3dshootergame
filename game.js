@@ -1,24 +1,51 @@
-// Initialize scene, camera, and renderer
-const scene = new THREE.Scene();
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-const renderer = new THREE.WebGLRenderer();
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+// Home screen elements
+const homeScreen = document.getElementById('homeScreen');
+const startButton = document.getElementById('startButton');
 
-// Lighting
-const light = new THREE.DirectionalLight(0xffffff, 1);
-light.position.set(10, 10, 10);
-scene.add(light);
+// Game variables
+let scene, camera, renderer, player, bullets, enemies;
+let gameStarted = false;
 
-// Create player (a simple cube)
-const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
-const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-const player = new THREE.Mesh(playerGeometry, playerMaterial);
-scene.add(player);
-player.position.z = -5;
+// Initialize the game
+function initGame() {
+    // Initialize scene, camera, and renderer
+    scene = new THREE.Scene();
+    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+    renderer = new THREE.WebGLRenderer();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
 
-// Bullets array
-const bullets = [];
+    // Lighting
+    const light = new THREE.DirectionalLight(0xffffff, 1);
+    light.position.set(10, 10, 10);
+    scene.add(light);
+
+    // Create player (a simple cube)
+    const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
+    const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    player = new THREE.Mesh(playerGeometry, playerMaterial);
+    scene.add(player);
+    player.position.z = -5;
+
+    // Bullets array
+    bullets = [];
+    enemies = [];
+}
+
+// Start game function
+function startGame() {
+    homeScreen.style.display = 'none';
+    gameStarted = true;
+    
+    // Only initialize game elements if not already done
+    if (!scene) {
+        initGame();
+        animate();
+    }
+}
+
+// Event listener for start button
+startButton.addEventListener('click', startGame);
 
 // Create an enemy (another cube)
 function createEnemy() {
@@ -32,7 +59,6 @@ function createEnemy() {
     return enemy;
 }
 
-let enemies = [];
 function spawnEnemies() {
     if (Math.random() < 0.02) {
         enemies.push(createEnemy());
@@ -58,6 +84,12 @@ class Bullet {
 const keys = {};
 window.addEventListener('keydown', (e) => {
     keys[e.key] = true;
+    
+    // Prevent spacebar from scrolling the page
+    if (e.key === ' ' && gameStarted) {
+        e.preventDefault();
+        shoot();
+    }
 });
 window.addEventListener('keyup', (e) => {
     keys[e.key] = false;
@@ -73,11 +105,9 @@ function movePlayer() {
 
 // Shooting mechanics
 function shoot() {
+    if (!gameStarted) return;
     bullets.push(new Bullet(player.position.clone()));
 }
-window.addEventListener('keydown', (e) => {
-    if (e.key === ' ') shoot(); // Space bar shoots
-});
 
 // Enemy collision detection with bullets
 function detectCollisions() {
@@ -106,6 +136,8 @@ function checkGameOver() {
 
 // Game loop
 function animate() {
+    if (!gameStarted) return;
+    
     requestAnimationFrame(animate);
     movePlayer();
 
@@ -128,5 +160,11 @@ function animate() {
     renderer.render(scene, camera);
 }
 
-// Start the game loop
-animate();
+// Handle window resize
+window.addEventListener('resize', () => {
+    if (camera && renderer) {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+});
