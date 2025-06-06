@@ -1,67 +1,109 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D Shooter Game</title>
-    <style>
-        body {
-            margin: 0;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
-        #gameCanvas {
-            display: block;
-        }
-        #homeScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            z-index: 100;
-        }
-        #startButton {
-            padding: 15px 30px;
-            font-size: 20px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-top: 20px;
-        }
-        #startButton:hover {
-            background-color: #45a049;
-        }
-        h1 {
-            font-size: 48px;
-            margin-bottom: 10px;
-        }
-        p {
-            font-size: 18px;
-            margin-bottom: 30px;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>3D Shooter Game</title>
+  <style>
+    /* Standaardstijl voor de body en canvas */
+    body {
+      margin: 0;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+    canvas {
+      display: block;
+    }
+
+    /* Knopstijl */
+    .button {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .button:hover {
+      background-color: #27ae60;
+    }
+
+    /* Positionering van overlays */
+    #startScreen, #gameOverBanner, #controls {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: rgba(46, 204, 113, 0.9);
+      padding: 40px;
+      border-radius: 10px;
+      text-align: center;
+      display: none;
+    }
+
+    #startScreen {
+      display: block;
+    }
+
+    #controls {
+      top: 20px;
+      left: auto;
+      right: 20px;
+      transform: none;
+      text-align: left;
+      padding: 20px;
+    }
+
+    #scoreDisplay {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 20px;
+      color: white;
+      background-color: rgba(0, 0, 0, 0.5);
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    #settingsToggle {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+    }
+  </style>
 </head>
 <body>
-    <!-- Home Screen -->
-    <div id="homeScreen">
-        <h1>3D Shooter Game</h1>
-        <p>Use arrow keys to move and spacebar to shoot</p>
-        <button id="startButton">Start Game</button>
-    </div>
+  <!-- Startscherm -->
+  <div id="startScreen">
+    <h1>3D Shooter Game</h1>
+    <button id="startBtn" class="button">Start Game</button>
+  </div>
 
-    <!-- Link to Three.js from a CDN -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    
-    <!-- Game script -->
-    <script src="./game.js"></script>
+  <!-- Score weergave -->
+  <div id="scoreDisplay"><span id="score">Score: 0</span></div>
+
+  <!-- Instellingenknop -->
+  <div id="settingsToggle"><button class="button">⚙️</button></div>
+
+  <!-- Besturing en gevoeligheidsinstelling -->
+  <div id="controls">
+    <label>Sensitivity:
+      <input type="range" id="sensitivity" min="0.05" max="0.5" step="0.01" value="0.1">
+    </label><br><br>
+    <button onclick="resetHighScore()" class="button">Reset High Score</button>
+  </div>
+
+  <!-- Game Over banner -->
+  <div id="gameOverBanner">
+    <h1>Game Over</h1>
+    <p>Restarting in 1 second...</p>
+  </div>
+
+  <!-- Three.js en spelcode -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="game.js"></script>
 </body>
 </html>
