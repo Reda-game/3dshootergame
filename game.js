@@ -1,170 +1,177 @@
-// Home screen elements
-const homeScreen = document.getElementById('homeScreen');
-const startButton = document.getElementById('startButton');
-
-// Game variables
-let scene, camera, renderer, player, bullets, enemies;
+// Scorebeheer en instellingen
+let score = 0;
+let highScore = localStorage.getItem('highScore') || 0;
 let gameStarted = false;
+let isGameOver = false;
+let sensitivity = parseFloat(document.getElementById('sensitivity').value);
 
-// Initialize the game
-function initGame() {
-    // Initialize scene, camera, and renderer
-    scene = new THREE.Scene();
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+// HTML elementen ophalen
+const scoreText = document.getElementById('score');
+const gameOverBanner = document.getElementById('gameOverBanner');
 
-    // Lighting
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(10, 10, 10);
-    scene.add(light);
+// Toon/verberg instellingenmenu
+document.getElementById('settingsToggle').addEventListener('click', () => {
+  const controls = document.getElementById('controls');
+  controls.style.display = (controls.style.display === 'block') ? 'none' : 'block';
+});
 
-    // Create player (a simple cube)
-    const playerGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const playerMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    player = new THREE.Mesh(playerGeometry, playerMaterial);
-    scene.add(player);
-    player.position.z = -5;
+// Gevoeligheid aanpassen
+document.getElementById('sensitivity').addEventListener('input', (e) => {
+  sensitivity = parseFloat(e.target.value);
+});
 
-    // Bullets array
-    bullets = [];
-    enemies = [];
+// Reset highscore
+function resetHighScore() {
+  localStorage.setItem('highScore', 0);
+  alert('High score reset.');
 }
 
-// Start game function
-function startGame() {
-    homeScreen.style.display = 'none';
-    gameStarted = true;
-    
-    // Only initialize game elements if not already done
-    if (!scene) {
-        initGame();
-        animate();
-    }
-}
+// Start de game
+document.getElementById('startBtn').addEventListener('click', () => {
+  document.getElementById('startScreen').style.display = 'none';
+  gameStarted = true;
+  animate();
+});
 
-// Event listener for start button
-startButton.addEventListener('click', startGame);
+// Three.js setup
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-// Create an enemy (another cube)
+// Lichtbron toevoegen
+const light = new THREE.DirectionalLight(0xffffff, 1);
+light.position.set(10, 10, 10);
+scene.add(light);
+
+// Spelerobject
+const player = new THREE.Mesh(
+  new THREE.BoxGeometry(1, 1, 1),
+  new THREE.MeshBasicMaterial({ color: 0x00ff00 })
+);
+player.position.z = -5;
+scene.add(player);
+
+const bullets = [];
+let enemies = [];
+
+// Maak vijand aan
 function createEnemy() {
-    const enemyGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const enemyMaterial = new THREE.MeshBasicMaterial({ color: 0xff0000 });
-    const enemy = new THREE.Mesh(enemyGeometry, enemyMaterial);
-    enemy.position.x = (Math.random() - 0.5) * 10;
-    enemy.position.y = (Math.random() - 0.5) * 10;
-    enemy.position.z = -20;
-    scene.add(enemy);
-    return enemy;
+  const enemy = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.MeshBasicMaterial({ color: 0xff0000 })
+  );
+  enemy.position.x = (Math.random() - 0.5) * 10;
+  enemy.position.y = (Math.random() - 0.5) * 10;
+  enemy.position.z = -20;
+  scene.add(enemy);
+  return enemy;
 }
 
+// Vijanden periodiek spawnen
 function spawnEnemies() {
-    if (Math.random() < 0.02) {
-        enemies.push(createEnemy());
-    }
+  if (Math.random() < 0.02) enemies.push(createEnemy());
 }
 
-// Bullet class
+// Klasse voor kogelobjecten
 class Bullet {
-    constructor(position) {
-        const bulletGeometry = new THREE.SphereGeometry(0.1, 8, 8);
-        const bulletMaterial = new THREE.MeshBasicMaterial({ color: 0xffff00 });
-        this.mesh = new THREE.Mesh(bulletGeometry, bulletMaterial);
-        this.mesh.position.copy(position);
-        scene.add(this.mesh);
-    }
+  constructor(position) {
+    this.mesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.1, 8, 8),
+      new THREE.MeshBasicMaterial({ color: 0xffff00 })
+    );
+    this.mesh.position.copy(position);
+    scene.add(this.mesh);
+  }
 
-    update() {
-        this.mesh.position.z -= 0.2; // Move bullet forward
-    }
+  update() {
+    this.mesh.position.z -= 0.2;
+  }
 }
 
-// Basic controls using keyboard
+// Bewegingstoetsen bijhouden
 const keys = {};
-window.addEventListener('keydown', (e) => {
-    keys[e.key] = true;
-    
-    // Prevent spacebar from scrolling the page
-    if (e.key === ' ' && gameStarted) {
-        e.preventDefault();
-        shoot();
-    }
-});
-window.addEventListener('keyup', (e) => {
-    keys[e.key] = false;
-});
+window.addEventListener('keydown', (e) => keys[e.key] = true);
+window.addEventListener('keyup', (e) => keys[e.key] = false);
 
-// Player movement
+// Spelerbeweging op basis van pijltjestoetsen
 function movePlayer() {
-    if (keys['ArrowUp']) player.position.y += 0.1;
-    if (keys['ArrowDown']) player.position.y -= 0.1;
-    if (keys['ArrowLeft']) player.position.x -= 0.1;
-    if (keys['ArrowRight']) player.position.x += 0.1;
+  if (keys['ArrowUp']) player.position.y += sensitivity;
+  if (keys['ArrowDown']) player.position.y -= sensitivity;
+  if (keys['ArrowLeft']) player.position.x -= sensitivity;
+  if (keys['ArrowRight']) player.position.x += sensitivity;
+
+  // Speler binnen grenzen houden
+  player.position.x = THREE.MathUtils.clamp(player.position.x, -5, 5);
+  player.position.y = THREE.MathUtils.clamp(player.position.y, -3.5, 3.5);
 }
 
-// Shooting mechanics
+// Functie om te schieten
 function shoot() {
-    if (!gameStarted) return;
-    bullets.push(new Bullet(player.position.clone()));
+  bullets.push(new Bullet(player.position.clone()));
 }
 
-// Enemy collision detection with bullets
-function detectCollisions() {
-    enemies.forEach((enemy, enemyIndex) => {
-        bullets.forEach((bullet, bulletIndex) => {
-            const distance = enemy.position.distanceTo(bullet.mesh.position);
-            if (distance < 1) {
-                scene.remove(enemy);
-                scene.remove(bullet.mesh);
-                enemies.splice(enemyIndex, 1); // Remove enemy
-                bullets.splice(bulletIndex, 1); // Remove bullet
-            }
-        });
-    });
-}
-
-// Game over condition (if enemy reaches player)
-function checkGameOver() {
-    enemies.forEach((enemy) => {
-        if (enemy.position.distanceTo(player.position) < 1) {
-            alert("Game Over!");
-            location.reload();
-        }
-    });
-}
-
-// Game loop
-function animate() {
-    if (!gameStarted) return;
-    
-    requestAnimationFrame(animate);
-    movePlayer();
-
-    bullets.forEach((bullet, index) => {
-        bullet.update();
-        if (bullet.mesh.position.z < -50) {
-            scene.remove(bullet.mesh); // Remove bullets that are far off screen
-            bullets.splice(index, 1);
-        }
-    });
-
-    enemies.forEach((enemy) => {
-        enemy.position.z += 0.05; // Move enemies towards the player
-    });
-
-    spawnEnemies();
-    detectCollisions();
-    checkGameOver();
-
-    renderer.render(scene, camera);
-}
-
-// Handle window resize
-window.addEventListener('resize', () => {
-    if (camera && renderer) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-    }
+// Spatiebalk om te schieten
+window.addEventListener('keydown', (e) => {
+  if (e.key === ' ') shoot();
 });
+
+// Detecteer botsingen tussen kogels en vijanden
+function detectCollisions() {
+  enemies.forEach((enemy, ei) => {
+    bullets.forEach((bullet, bi) => {
+      if (enemy.position.distanceTo(bullet.mesh.position) < 1) {
+        scene.remove(enemy);
+        scene.remove(bullet.mesh);
+        enemies.splice(ei, 1);
+        bullets.splice(bi, 1);
+        score++;
+        scoreText.textContent = `Score: ${score}`;
+        if (score > highScore) {
+          highScore = score;
+          localStorage.setItem('highScore', highScore);
+        }
+      }
+    });
+  });
+}
+
+// Controleer of speler geraakt is
+function checkGameOver() {
+  if (isGameOver) return true;
+
+  for (let enemy of enemies) {
+    if (enemy.position.distanceTo(player.position) < 1) {
+      isGameOver = true;
+      gameOverBanner.style.display = 'block';
+      setTimeout(() => location.reload(), 1000);
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// Animatielus van het spel
+function animate() {
+  if (!gameStarted || isGameOver) return;
+
+  requestAnimationFrame(animate);
+  movePlayer();
+
+  bullets.forEach((bullet, index) => {
+    bullet.update();
+    if (bullet.mesh.position.z < -50) {
+      scene.remove(bullet.mesh);
+      bullets.splice(index, 1);
+    }
+  });
+
+  enemies.forEach((enemy) => enemy.position.z += 0.05);
+  spawnEnemies();
+  detectCollisions();
+  if (checkGameOver()) return;
+
+  renderer.render(scene, camera);
+}
