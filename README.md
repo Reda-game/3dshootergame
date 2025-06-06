@@ -1,2 +1,2 @@
 # Shooter Game
-https://redax911.github.io/3dshootergame/
+https://reda-game.github.io/3dshootergame/
